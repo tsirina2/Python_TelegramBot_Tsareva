@@ -164,7 +164,7 @@
 Проведите рефакторинг кода: уберите весь лишний код, который не нужен для поддержки функции календаря. 
 <details>
     <summary>Подсказка</summary>
-<br>
+
    К лишнему коду относятся:
    1. Неактивный код, который запрашивает ввод с клавиатуры, если вы не удалили его в задании №2.
    2. Код, который отвечает за работу с заметками:
@@ -173,3 +173,41 @@
       - части основной функции приложения `main`, которые их вызвают.
     
 </details> 
+
+## Задание №5. Интегрируйте бота с базой данных PostgreSQL и организуйте хранение событий в базе данных вместо файлов
+1. Установите PostgreSQL на свой компьютер. Для этого скачайте дистрибутив для вашей операционной системы с официального сайта https://www.postgresql.org/download/ и выполните процесс установки. Также вы можете воспользоваться пакетным менеджером вашей операционной системы для установки PostgreSQL из командной строки. Например, для Ubuntu и Debian это пакетный менеджер APT, а для Mac OS — Homebrew.
+
+2. Запустите PostgreSQL. Запуск различается в зависимости от операционной системы.
+  <details>
+    <summary>Как запустить PostgreSQL на Windows</summary>
+       
+    1. Откройте командную строку из аккаунта администратора.
+    2. Назначьте директорию, в которой установлен PostgreSQL, рабочей директорией. Например, если PostgreSQL установлен в C:\Program Files\PostgreSQL\13\bin, введите команду:
+      
+    ```python
+        # Зададим глобально доступный объект календаря
+        calendar = Calendar()
+        
+        # Создать обработчик для создания событий 
+        def event_create_handler(update, context):
+            try:
+                # Взять данные о событии из сообщения пользователя
+                event_name = update.message.text[14:]
+                event_date = "2023-03-14"
+                event_time = "14:00"
+                event_details = "Описание события"
+        
+                # Создать событие с помощью метода create_event класса Calendar
+                event_id = calendar.create_event(event_name, event_date, event_time, event_details)
+        
+                # Отправить пользователю подтверждение
+                context.bot.send_message(chat_id=update.message.chat_id, text=f"Событие {event_name} создано и имеет номер {event_id}.")
+            except:
+                # Отправить пользователю сообщение об ошибке
+                context.bot.send_message(chat_id=update.message.chat_id, text="При создании события произошла ошибка.")
+        
+        # Зарегистрировать обработчик, чтобы он вызывался по команде /create_event
+        updater.dispatcher.add_handler(CommandHandler('create_event', event_create_handler))
+    ```
+  
+    </details> 
