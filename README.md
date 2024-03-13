@@ -59,6 +59,7 @@
    <details>
     <summary>Подсказка</summary>
    Изучите пример кода обработчика для создания заметок `create_note_handler(update, context)`.
+       
     ```python
         # Создать обработчик для создания заметок create_handler
         def create_note_handler(update, context):
@@ -77,6 +78,7 @@
         # Добавить функцию create_note_handler как CommandHandler для команды /create
         updater.dispatcher.add_handler(CommandHandler('create', create_note_handler))
     ```
+    
     </details> 
     
     Заметьте, что обработчики получают ввод пользователя и выдают ему результат работы функций.
