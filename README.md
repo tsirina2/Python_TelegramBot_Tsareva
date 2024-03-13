@@ -55,7 +55,8 @@
     updater = Updater(token="API_TOKEN")
     ```
     
-6. Создайте обработчики (handlers) для каждого действия, которое выполняет бот. Например:
+6. Создайте обработчики (handlers) для каждого действия, которое выполняет бот.
+   
    <details>
     <summary>Подсказка</summary>
        
@@ -93,5 +94,64 @@
     ```python
     updater.start_polling()
     ```
+## Задание №3. Добавьте в приложение класс `calendar`
+1. Добавьте в приложение класс `Calendar` который будет содержать методы для создания, чтения, редактирования и удаления событий, а также отображения всех событий. Для работы с календарем вам потребуются библиотеки `os` и `datetime`. Импортируйте их в начале кода.
+   
+<details>
+    
+    <summary>Подсказка</summary>
 
+    ```python
+        # Создать класс Calendar
+        class Calendar:
+            def __init__(self):
+                self.events = {}
+        
+        # Создать метод create_event
+            def create_event(self, event_name, event_date, event_time, event_details):
+                event_id = len(self.events) + 1
+                event = {
+                    "id": event_id,
+                    "name": event_name,
+                    "date": event_date,
+                    "time": event_time,
+                    "details": event_details
+                }
+                self.events[event_id] = event
+                return event_id
+        ```
+        
+</details>
 
+    Аналогично добавьте методы для остальных операций с событиями.
+    
+3. Добавьте и зарегистрируйте обработчики команд для создания, чтения, редактирования и удаления событий, а также отображения всех событий. 
+    - Подсказка: пример кода, который создает обработчик для создания событий **`create_event_handler(update, context)`**
+        
+        ```python
+        # Зададим глобально доступный объект календаря
+        calendar = Calendar()
+        
+        # Создать обработчик для создания событий 
+        def event_create_handler(update, context):
+            try:
+                # Взять данные о событии из сообщения пользователя
+                event_name = update.message.text[14:]
+                event_date = "2023-03-14"
+                event_time = "14:00"
+                event_details = "Описание события"
+        
+                # Создать событие с помощью метода create_event класса Calendar
+                event_id = calendar.create_event(event_name, event_date, event_time, event_details)
+        
+                # Отправить пользователю подтверждение
+                context.bot.send_message(chat_id=update.message.chat_id, text=f"Событие {event_name} создано и имеет номер {event_id}.")
+            except:
+                # Отправить пользователю сообщение об ошибке
+                context.bot.send_message(chat_id=update.message.chat_id, text="При создании события произошла ошибка.")
+        
+        # Зарегистрировать обработчик, чтобы он вызывался по команде /create_event
+        updater.dispatcher.add_handler(CommandHandler('create_event', event_create_handler))
+        ```
+        
+4. Затем включите этот класс в основную функцию приложения (функция **`main()`**), чтобы дать пользователю возможность создавать, читать, редактировать и удалять события, а также отображать весь список событий.
