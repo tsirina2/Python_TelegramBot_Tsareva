@@ -164,12 +164,12 @@
 Проведите рефакторинг кода: уберите весь лишний код, который не нужен для поддержки функции календаря. 
 <details>
     <summary>Подсказка</summary>
-       
+<p>
    К лишнему коду относятся:
    1. Неактивный код, который запрашивает ввод с клавиатуры, если вы не удалили его в задании №2.
    2. Код, который отвечает за работу с заметками:
       - функции `create_note`, `read_note`, `edit_note`, `delete_note`, `display_notes`, `display_sorted_notes`;
       - обработчики `create_note_handler`, `read_note_handler`, `edit_note_handler`, `delete_note_handler`, `display_notes_handler`, `display_sorted_notes_handler`;
       - части основной функции приложения `main`, которые их вызвают.
-
+</p>
 </details> 
