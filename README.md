@@ -44,23 +44,22 @@
 
 4. Импортируйте модуль `telegram` и классы `Updater`, `CommandHandler`, `MessageHandler`, `Filters` в свой код. Для этого введите: 
     
-    ```
+    ```python
     import telegram
     from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
     ```
     
 5. Инициализируйте объект `Updater` с помощью токена API:
     
-    ```
+    ```python
     updater = Updater(token="API_TOKEN")
     ```
     
 6. Создайте обработчики (handlers) для каждого действия, которое выполняет бот. Например:
    <details>
     <summary>Подсказка</summary>
-       Изучите пример кода обработчика для создания заметок `create_note_handler(update, context)`.
-       
-       ```
+   Изучите пример кода обработчика для создания заметок `create_note_handler(update, context)`.
+    ```python
         # Создать обработчик для создания заметок create_handler
         def create_note_handler(update, context):
             try:
@@ -77,8 +76,8 @@
                 context.bot.send_message(chat_id=update.message.chat_id, text="Произошла ошибка.")
         # Добавить функцию create_note_handler как CommandHandler для команды /create
         updater.dispatcher.add_handler(CommandHandler('create', create_note_handler))
-       ```
-    </details>
+    ```
+    </details> 
     
     Заметьте, что обработчики получают ввод пользователя и выдают ему результат работы функций.
     
