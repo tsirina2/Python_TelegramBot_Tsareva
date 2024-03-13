@@ -58,8 +58,9 @@
 6. Создайте обработчики (handlers) для каждого действия, которое выполняет бот. Например:
    <details>
     <summary>Подсказка</summary>
+       
    Изучите пример кода обработчика для создания заметок `create_note_handler(update, context)`.
-   <p>   
+      
     ```python
         # Создать обработчик для создания заметок create_handler
         def create_note_handler(update, context):
@@ -80,7 +81,7 @@
         # Добавить функцию create_note_handler как CommandHandler для команды /create
         updater.dispatcher.add_handler(CommandHandler('create', create_note_handler))
     ```
-    </p>
+  
     </details> 
     
     Заметьте, что обработчики получают ввод пользователя и выдают ему результат работы функций.
