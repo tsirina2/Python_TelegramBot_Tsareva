@@ -300,3 +300,50 @@
 
     </details>
 
+4. Установите библиотеку `psycopg2` для Python, которая представляет собой адаптер PostgreSQL для Python. Для этого введите команду: 
+    
+    ```python
+    pip install psycopg2
+    ```
+    
+5. Подключитесь к базе данных. Для этого используйте следующий код:
+    
+    ```python
+    import psycopg2
+    conn = psycopg2.connect(
+        host=<localhost>,
+        database=<database_name>,
+        user=<username>,
+        password=<password>
+    )
+    ```
+    
+    Замените `<localhost>`, `<database_name>`, `<username>`, `<password>` на адрес хоста, имя базы данных, логин и пароль соответственно.
+    
+6. Создайте в базе данных таблицу для хранения событий. В таблице должны быть столбцы для названия, даты и времени события.
+    
+    ```python
+    cursor = conn.cursor()
+    cursor.execute("""
+    CREATE TABLE events (
+        id serial PRIMARY KEY,
+        name text NOT NULL,
+        date date NOT NULL,
+        time time NOT NULL
+    );
+    """)
+    conn.commit()
+    ```
+    
+7. Измените класс `Calendar` и его методы в коде вашего бота, чтобы использовать базу данных вместо списка Python. Для этого измените: 
+    - метод  `create_event(self, event_name, event_date, event_time, event_details)`, чтобы он вставлял новую строку в таблицу `events` вместо добавления события в список событий;
+    - методы `read_event(self, event_name)` и `display_events(self)`, чтобы они отображали строки таблицы `events` вместо извлечения элементов списка событий;
+    - метод `edit_event(self, event_name, new_date=None, new_description=None)`, чтобы он изменял строки таблицы `events` вместо элементов списка событий;
+    - метод `delete_event(self, event_name)`, чтобы он удалял строки таблицы `events` вместо элементов списка событий.
+      
+8. Создайте экземпляр класса `Calendar` и передайте ему объект `conn` при создании экземпляра. Для этого введите:
+    
+    ```python
+    calendar = Calendar(conn)
+    ```
+
