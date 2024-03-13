@@ -59,7 +59,7 @@
    <details>
     <summary>Подсказка</summary>
    Изучите пример кода обработчика для создания заметок `create_note_handler(update, context)`.
-       
+   <p>   
     ```python
         # Создать обработчик для создания заметок create_handler
         def create_note_handler(update, context):
@@ -73,12 +73,14 @@
                 # Отправить пользователю подтверждение, что заметка создана
                 context.bot.send_message(chat_id=update.message.chat_id, text=f"Заметка {note_name} создана.")
             except:
+    
                 # Отправить пользователю сообщение об ошибке
                 context.bot.send_message(chat_id=update.message.chat_id, text="Произошла ошибка.")
+    
         # Добавить функцию create_note_handler как CommandHandler для команды /create
         updater.dispatcher.add_handler(CommandHandler('create', create_note_handler))
     ```
-    
+    </p>
     </details> 
     
     Заметьте, что обработчики получают ввод пользователя и выдают ему результат работы функций.
