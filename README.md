@@ -35,30 +35,30 @@
 ## Задание №2. Подключите бота к Telegram
 Используйте Telegram API, чтобы создать бота в Telegram. 
 
-1. Сделайте запрос в BotFather в Telegram, чтобы создать нового бота. Для этого введите в него команду /newbot и следуйте инструкциям. Вы получите уникальный токен API для бота.
+1. Сделайте запрос в **BotFather** в Telegram, чтобы создать нового бота. Для этого введите в него команду `/newbot` и следуйте инструкциям. Вы получите уникальный токен API для бота.
 
-2. Вынесите API_TOKEN в отдельный файл secrets.py, который импортируется в боте.
-Добавьте secrets.py в .gitignore, чтобы этот файл случайно не попал на GitHub.
+2. Вынесите API_TOKEN в отдельный файл `secrets.py`, который импортируется в боте.
+Добавьте `secrets.py` в `.gitignore`, чтобы этот файл случайно не попал на GitHub.
 
-3. Установите библиотеку python-telegram-bot. Для этого запустите `**pip install python-telegram-bot==13.13**`.
+3. Установите библиотеку `python-telegram-bot`. Для этого запустите `pip install python-telegram-bot==13.13`.
 
-4. Импортируйте модуль telegram и классы Updater, CommandHandler, MessageHandler, Filters в свой код. Для этого введите: 
+4. Импортируйте модуль `telegram` и классы `Updater`, `CommandHandler`, `MessageHandler`, `Filters` в свой код. Для этого введите: 
     
     ```python
     import telegram
     from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
     ```
     
-5. Инициализируйте объект Updater с помощью токена API:
+5. Инициализируйте объект `Updater` с помощью токена API:
     
     ```python
     updater = Updater(token="API_TOKEN")
     ```
     
 6. Создайте обработчики (handlers) для каждого действия, которое выполняет бот. Например:
-    - Подсказка: пример кода обработчика для создания заметок **`create_note_handler(update, context)`**
-        
-        ```python
+   <details>
+    <summary>Подсказка: пример кода обработчика для создания заметок `create_note_handler(update, context)`</summary>
+    ```python
         # Создать обработчик для создания заметок create_handler
         def create_note_handler(update, context):
             try:
@@ -77,13 +77,12 @@
         # Добавить функцию create_note_handler как CommandHandler для команды /create
         updater.dispatcher.add_handler(CommandHandler('create', create_note_handler))
         ```
-        
-    
+    </details>
     Заметьте, что обработчики получают ввод пользователя и выдают ему результат работы функций.
     
-7. Повторите предыдущий шаг для каждого действия, которое выполняет бот (чтение, редактирование, удаление заметок, отображение всех заметок, отображение всех заметок в отсортированном виде).
+8. Повторите предыдущий шаг для каждого действия, которое выполняет бот (чтение, редактирование, удаление заметок, отображение всех заметок, отображение всех заметок в отсортированном виде).
 
-8. Запустите приложение. Для этого введите команду: 
+9. Запустите приложение. Для этого введите команду: 
     
     ```python
     updater.start_polling()
