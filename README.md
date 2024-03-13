@@ -15,8 +15,8 @@
     > логин на GitHub — укажите имя пользователя (логин) на GitHub <br>
     > e-mail — укажите свой e-mail
 4. Предоставьте код-ревьюеру доступ к вашему проекту.
-       * Зайдите в **“Settings”** репозитория, выберите в левом столбце вкладку **“Collaborators”**.
-       * Нажмите **“Add people”.** В появившемся окне впишите юзернейм **EdusonCodeReview**. Выберите его и нажмите **“Add EdusonCodeReview to this repository”.**
+- Зайдите в **“Settings”** репозитория, выберите в левом столбце вкладку **“Collaborators”**.
+- Нажмите **“Add people”.** В появившемся окне впишите юзернейм **EdusonCodeReview**. Выберите его и нажмите **“Add EdusonCodeReview to this repository”.**
 
 ### Как выполнить задание
 
