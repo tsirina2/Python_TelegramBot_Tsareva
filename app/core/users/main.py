@@ -3,8 +3,8 @@ import logging
 from telegram.ext import Application as PTBApplication, CommandHandler
 from telegram import Update
 
-from core.handlers.commands import start
-from core.config.config import AppSettings
+from handlers.commands import start
+from config.config import AppSettings
 from core.users.repositories import UserRepository
 from core.users.services import UserService
 from infra.postgres.db import Database
