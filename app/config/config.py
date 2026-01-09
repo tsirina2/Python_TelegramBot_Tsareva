@@ -1,34 +1,34 @@
-import os
-
-from pydantic import PostgresDsn,SecretStr,Secret
-from pydantic_settings import BaseSettings,SettingsConfigDict
+from pathlib import Path
+from pydantic import SecretStr
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from urllib.parse import quote
 
 
 class AppSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_file= os.path.join(os.path.dirname(__file__), ".envs/.env"))
+    # Load .env from the correct folder
+    model_config = SettingsConfigDict(
+        env_file=Path(__file__).parent / "settings" / ".env"
+    )
 
+    # Telegram configuration
     TELEGRAM_API_KEY: SecretStr
-    LOG_LEVEL:str = "INFO"
+    LOG_LEVEL: str = "INFO"
 
-
-    POSTGRES_USER: str ="postgres"
-    POSTGRES_PASSWORD: SecretStr = SecretStr("postgres")
-    POSTGRES_HOST:str = "localhost"
+    # PostgreSQL configuration
+    POSTGRES_USER: str = "tsirina"
+    POSTGRES_PASSWORD: SecretStr = SecretStr("Twe2?0op")
+    POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
-    POSTGRES_DB: str = "postgres"
-
+    POSTGRES_DB: str = "ice_cream_db"
 
     @property
-    def POSTGRES_DSN(self) -> PostgresDsn:
-        return PostgresDsn.build(
-            scheme= "postgresql",
-            username = self.POSTGRES_USER,
-            password = self.POSTGRES_PASSWORD.get_secret_value(),
-            host = self.POSTGRES_HOST,
-            port= self.POSTGRES_PORT,
-            path = f"/{self.POSTGRES_DB}"
-        )
-
+    def POSTGRES_DSN(self) -> str:
+        """
+        Returns PostgreSQL DSN as a plain string suitable for asyncpg.
+        Special characters in password are URL-encoded automatically.
+        """
+        password = quote(self.POSTGRES_PASSWORD.get_secret_value())  # encode special chars
+        return f"postgresql://{self.POSTGRES_USER}:{password}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
 
 

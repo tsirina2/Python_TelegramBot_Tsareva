@@ -1,2 +1,113 @@
-.env
+import logging
+import asyncio
+
+from telegram.ext import Application as PTBApplication
+from telegram.ext import CommandHandler
+from app.handlers.commands import start  # your command handler
+from app.config.config import AppSettings
+from app.infra.postgres.db import Database
+
+# Configure logging
+def configure_logging():
+    logging.basicConfig(
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        level=logging.INFO
+    )
+
+# Main application class
+class BotApp:
+    def __init__(self):
+        # Load settings from .env
+        self.app_settings = AppSettings()
+        print("TELEGRAM_API_KEY:", self.app_settings.TELEGRAM_API_KEY.get_secret_value())
+
+        # Initialize database
+        try:
+            # Convert DSN to string in case it's a PostgresDsn object
+            self.database = Database(str(self.app_settings.POSTGRES_DSN))
+        except Exception as e:
+            logging.error("Failed to initialize database:")
+            logging.exception(e)
+            raise
+
+        # Create Telegram bot application
+        try:
+            self.bot_app = PTBApplication.builder().token(
+                self.app_settings.TELEGRAM_API_KEY.get_secret_value()
+            ).build()
+
+            # Add command handlers
+            self.bot_app.add_handler(CommandHandler("start", start))
+        except Exception as e:
+            logging.error("Failed to initialize Telegram bot:")
+            logging.exception(e)
+            raise
+
+    async def run(self):
+        # Initialize the database connection pool
+        try:
+            await self.database.initialize()
+            logging.info("Database initialized successfully.")
+        except Exception as e:
+            logging.error("Database connection failed:")
+            logging.exception(e)
+            return
+
+        # Start the bot
+        logging.info("Bot is starting...")
+        await self.bot_app.initialize()
+        await self.bot_app.start()
+        await self.bot_app.updater.start_polling()  # or start polling depending on your PTB version
+        logging.info("Bot is running.")
+        await self.bot_app.updater.idle()  # keeps bot running
+
+# Entry point
+if __name__ == "__main__":
+    configure_logging()
+    try:
+        app = BotApp()
+        asyncio.run(app.run())
+    except Exception as e:
+        logging.error("Application crashed:")
+        logging.exception(e)
+✅ Key fixes in this version
+DSN conversion:
+
+python
+Copy code
+self.database = Database(str(self.app_settings.POSTGRES_DSN))
+ensures asyncpg receives a proper string.
+
+Error handling:
+
+Database initialization and Telegram bot setup are wrapped in try/except with logging.exception(e).
+
+Any crash will log the full traceback.
+
+Database initialization:
+await self.database.initialize() is called inside the async run() method.
+
+Logging:
+All major steps print info so you can see exactly what’s happening.
+
+Telegram API key:
+get_secret_value() is used to extract the string safely from SecretStr.
+
+If you want, I can also rewrite your Database class so it safely converts DSN to string internally, so you never have to worry about PostgresDsn vs string again. This will prevent future crashes when you pass app_settings.POSTGRES_DSN.
+
+Do you want me to do that?
+
+
+
+
+
+
+
+
+but you are not
+
+
+
+
+“import logging import asyncio from telegram.ext import Application as PTBApplication from telegram.ext import CommandHandler from app.handlers.commands import start \# your command handler from app.config.config import AppSettings from app.infra.postg
 
