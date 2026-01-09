@@ -3,11 +3,11 @@ import logging
 from telegram.ext import Application as PTBApplication, CommandHandler
 from telegram import Update
 
-from core.handlers.commands import start
-from core.config.config import AppSettings
-from core.users.repositories import UserRepository
-from core.users.services import UserService
-from infra.postgres.db import Database
+from app.handlers.commands import start
+from app.config.config import AppSettings
+from app.core.users.repositories import UserRepository
+from app.core.users.services import UserService
+from app.infra.postgres.db import Database
 
 
 def configure_logging() -> None:
@@ -23,13 +23,13 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 class Application:
 
     def __init__(self, app_settings: AppSettings):
-        self._settings = app_settings
+        self.app_settings = AppSettings()
 
-        self.database = Database(app_settings.POSTGRES_DSN)
+        self.database = Database(str(self.app_settings.POSTGRES_DSN))
 
-        self.ptb_application = (
+        self.bot_app= (
             PTBApplication.builder()
-            .token(self._settings.TELEGRAM_API_KEY.get_secret_value())
+            .token(self.app_settings.TELEGRAM_API_KEY.get_secret_value())
             .post_init(self.initialize_dependencies)
             .post_shutdown(self.shutdown_dependencies)
             .build()
@@ -46,7 +46,7 @@ class Application:
         ]
 
         for handler in handlers:
-            self.ptb_application.add_handler(handler)
+            self.bot_app.add_handler(handler)
 
     async def initialize_dependencies(self, app: PTBApplication) -> None:
         await self.database.initialize()
@@ -56,7 +56,7 @@ class Application:
 
     def run(self) -> None:
         logging.info("Starting bot polling...")
-        self.ptb_application.run_polling(allowed_updates=Update.ALL_TYPES)
+        self.bot_app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == "__main__":
