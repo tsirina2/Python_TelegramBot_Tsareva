@@ -3,12 +3,14 @@ import logging
 from telegram.ext import Application as PTBApplication, CommandHandler
 from telegram import Update
 
-from app.handlers.commands import start
+from app.handlers.commands import start,register
 from app.config.config import AppSettings
 from app.core.users.repositories import UserRepository
 from app.core.users.services import UserService
 from app.infra.postgres.db import Database
 from app.core.my_calendar import Calendar
+from telegram.ext import MessageHandler, filters
+from app.handlers.commands import create_event_start, handle_user_message
 
 
 def configure_logging() -> None:
@@ -29,7 +31,7 @@ class Application:
 
         self.database = Database(str(self.app_settings.POSTGRES_DSN))
 
-        self.calendar = Calendar()
+        self.calendar = Calendar(self.database)
 
         self.bot_app= (
             PTBApplication.builder()
@@ -42,18 +44,24 @@ class Application:
         self._register_handlers()
 
         user_repository = UserRepository(database=self.database)
-        self.user_service = UserService(repository=user_repository)
+        self.user_service = UserService(repository=user_repository, db=self.database)
+
+
 
     def _register_handlers(self):
         handlers = [
-            CommandHandler(command="start", callback=start),
-            CommandHandler("create_event", self.event_create_handler)
 
-            ]
-
+            CommandHandler("start", start),
+            CommandHandler("register", register),
+            CommandHandler("create_event", self.event_create_handler),
+        ]
         for handler in handlers:
             self.bot_app.add_handler(handler)
 
+            self.bot_app.add_handler(CommandHandler("create_event", create_event_start))
+            self.bot_app.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_user_message)
+        )
 
     async def event_create_handler(self,update,context):
             try:
@@ -61,7 +69,8 @@ class Application:
                 event_date = "2023 - 03 -14"
                 event_time = "14:00"
                 event_details = "Описание события"
-                event_id = self.calendar.create_event(event_name, event_date, event_time, event_details)
+                user_id = update.effective_user.id
+                event_id = await self.calendar.create_event(event_name, event_date, event_time, event_details)
 
         # Отправить пользователю подтверждение
                 await context.bot.send_message(chat_id=update.message.chat_id,

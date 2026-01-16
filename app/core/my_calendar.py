@@ -5,23 +5,23 @@ class Calendar:
     def __init__(self, db: Database):
         self.db = db
 
-    # ------------------------
-    # CREATE
-    # ------------------------
-    async def create_event(self, event_name: str, event_date: str, event_time: str, event_details: str):
+
+
+    async def create_event(self, event_name: str, event_date: str, event_time: str, event_details: str, user_id: int):
         async with self.db.connection() as conn:
             result = await conn.fetchrow(
                 """
-                INSERT INTO events(name, date, time)
-                VALUES($1, $2, $3)
+                INSERT INTO events(name, date, time, details, user_id)
+                VALUES($1, $2, $3, $4, $5)
                 RETURNING id
                 """,
                 event_name,
                 event_date,
-                event_time
+                event_time,
+                event_details,
+                user_id
             )
-            event_id = result["id"]
-        return event_id
+            return result["id"]
 
     # ------------------------
     # READ a single event by name
