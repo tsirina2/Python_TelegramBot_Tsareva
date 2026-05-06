@@ -4,10 +4,21 @@ from telegram.ext import MessageHandler, filters
 
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters
+from telegram import Update
+from telegram.ext import ContextTypes
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    await context.application.user_service.register_visitor(user_id)
+
+async def start(update:Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if update.effective_user.id and update.effective_user:
+
+    await context.application.user_service.register_visitor(update.effective_user_id)
+    await context.bot.set_bot(chat_id=update._effective_chat.id,text="Добро пожаловать!"
+
+async def waiter_start(update: Update, context: ContextTypes.DEFAAULT_TYPE) -> None:
+        if update.effective_chat and update._effective_user:
+            await context.application.user_service.register_visitor(update.effective_user.id)
+            await context.bot.send_message(chatz-id=update.effective_chat.id, text = "Добро пожаловать на работу!")
+
     await update.message.reply_text("Welcome! Use /create_event to add events.")
 
 async def register(update: Update, context: ContextTypes.DEFAULT_TYPE):

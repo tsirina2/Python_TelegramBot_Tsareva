@@ -1,5 +1,7 @@
 import logging
 
+from sqlalchemy.orm import declarative_base
+Base = declarative_base()
 from telegram.ext import Application as PTBApplication, CommandHandler
 from telegram import Update
 
@@ -11,31 +13,27 @@ from app.infra.postgres.db import Database
 from app.core.my_calendar import Calendar
 from telegram.ext import MessageHandler, filters
 from app.handlers.commands import create_event_start, handle_user_message
-
-
-def configure_logging() -> None:
-    logging.basicConfig(
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        level=logging.INFO,
-    )
-
-
-logging.getLogger("httpx").setLevel(logging.WARNING)
-
+from constants import RolesEnum
 
 
 class Application:
 
-    def __init__(self, app_settings: AppSettings):
+    def __init__(self, app_settings: AppSettings, **kwargs):
+        super().__init__(**kwargs)
         self.app_settings = app_settings
+        self._roles = {}
 
-        self.database = Database(str(self.app_settings.POSTGRES_DSN))
+        self.database = Database(
+            self.app_settings.postgres_dsn,
+            declarative_base=Base
+        )
 
         self.calendar = Calendar(self.database)
 
         self.bot_app= (
             PTBApplication.builder()
             .token(self.app_settings.TELEGRAM_API_KEY.get_secret_value())
+
             .post_init(self.initialize_dependencies)
             .post_shutdown(self.shutdown_dependencies)
             .build()
@@ -46,22 +44,55 @@ class Application:
         user_repository = UserRepository(database=self.database)
         self.user_service = UserService(repository=user_repository, db=self.database)
 
+    @staticmethod
+    async def application_startup(application: "Application") -> None:
+        await application.database.create_tables()
+        await application.setup_roles()
+        application.register_handlers()
 
+    @staticmethod
+    async def application_shutdown(application: ...) -> ...:
+        await application.database.shutdown()
+
+    async def setup_roles(self) -> None:
+        for role in RolesEnum:
+            if role not in self._roles:
+                self._roles[role] = Role(role)
+            user_id = await self.user_service.get_user_ids_for_role(role)
+            for user_id in user_ids:
+                self._roles[role].add_member(user_id)
+
+            for user_id in await self.user_service.get_user_ids_for_role(RolesEnum[role]):
+                self._roles[role].add_member(user_id)
+
+def configure_logging() -> None:
+    logging.basicConfig(
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        level=logging.INFO,
+    )
+
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
     def _register_handlers(self):
-        handlers = [
 
+        handlers = [
             CommandHandler("start", start),
             CommandHandler("register", register),
             CommandHandler("create_event", self.event_create_handler),
         ]
+
+        async def error_handler(update, context):
+            logging.error("Exception while handling update:", exc_info=context.error)
+
+        self.bot_app.add_error_handler(error_handler)
         for handler in handlers:
             self.bot_app.add_handler(handler)
 
-            self.bot_app.add_handler(CommandHandler("create_event", create_event_start))
-            self.bot_app.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_user_message)
+        self.bot_app.add_handler(
+            MessageHandler(filters.TEXT & ~filters.COMMAND, handle_user_message)
         )
+
+
 
     async def event_create_handler(self,update,context):
             try:

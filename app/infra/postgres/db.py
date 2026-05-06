@@ -1,35 +1,43 @@
-import asyncpg
-from dotenv import load_dotenv
-import os
-from contextlib import asynccontextmanager
 from typing import AsyncGenerator
+from contextlib import asynccontextmanager
 
-load_dotenv()  # loads .env file in the project root
+from pydantic import PostgresDsn, Secret
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,
+    async_sessionmaker,
+    AsyncSession,
+)
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+
 
 class Database:
-    def __init__(self, dsn: str | None = None):
-        # Use DSN if provided, otherwise build it from environment variables
-        self._dsn = dsn or (
-            f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
-            f"@{os.getenv('DB_HOST','localhost')}:{os.getenv('DB_PORT','5432')}"
-            f"/{os.getenv('DB_NAME')}"
-        )
-        self._pool: asyncpg.Pool | None = None
 
-    async def initialize(self) -> None:
-        self._pool = await asyncpg.create_pool(dsn=self._dsn)
-        print("Database pool initialized ✅")
+    def __init__(self, dsn: str, declarative_base):
+        self.engine = create_async_engine(dsn)
+        self.session_factory = async_sessionmaker(self.engine)
+        self.Base = declarative_base
 
-    async def shutdown(self) -> None:
-        if self._pool:
-            await self._pool.close()
-            print("Database pool closed ✅")
+    async def initialize(self):
+        async with self.engine.begin() as conn:
+            await conn.run_sync(self.Base.metadata.create_all)
+
+    async def shutdown(self):
+        await self.engine.dispose()
+
+    async def create_tables(self) -> None:
+        async with self._engine.begin() as conn:
+            await conn.run_sync(
+                self._declarative_base.metadata.create_all
+            )
 
     @asynccontextmanager
-    async def connection(self) -> AsyncGenerator[asyncpg.Connection, None]:
-        if self._pool is None:
-            raise RuntimeError("Database pool not initialized")
-        async with self._pool.acquire() as conn:
-            yield conn
-
-
+    async def session(self) -> AsyncGenerator[AsyncSession, None]:
+        async with self._async_session() as session:
+            try:
+                yield session
+            except Exception:
+                await session.rollback()
+                raise
+            else:
+                await session.commit()
