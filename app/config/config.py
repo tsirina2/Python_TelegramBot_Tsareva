@@ -1,5 +1,3 @@
-
-
 from pathlib import Path
 from urllib.parse import quote
 
@@ -10,16 +8,21 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class AppSettings(BaseSettings):
 
     model_config = SettingsConfigDict(
-        env_file=Path(__file__).parent / "settings" / ".env"
+        env_file=Path(__file__).parent / "settings" / ".env",
+        extra="ignore"
     )
 
     # Telegram
     TELEGRAM_API_KEY: SecretStr
     LOG_LEVEL: str = "INFO"
 
+    # Database type
+    DATABASE_TYPE: str = "postgres"
+
     # PostgreSQL
     POSTGRES_USER: str = "tsirina"
     POSTGRES_PASSWORD: SecretStr = SecretStr("Twe2?0op")
+
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str = "ice_cream_db"
@@ -35,4 +38,10 @@ class AppSettings(BaseSettings):
             f"{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
 
-
+    @property
+    def database_dsn(self) -> str:
+        """Return database DSN based on DATABASE_TYPE."""
+        if self.DATABASE_TYPE == "sqlite":
+            return "sqlite+aiosqlite:///./ice_cream.db"
+        else:
+            return self.postgres_dsn

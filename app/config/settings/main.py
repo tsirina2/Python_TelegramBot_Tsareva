@@ -1,7 +1,28 @@
 import logging
 import asyncio
+from dataclasses import dataclass
+from typing import Optional
 
 from sqlalchemy.orm import declarative_base
+from sqlalchemy import Column, Integer, String, Boolean
+
+# === Единый Base и модель User — внутри main.py ===
+Base = declarative_base()
+
+# 🔽 Определяем User здесь, чтобы Base.metadata его "увидел"
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    telegram_id = Column(Integer, unique=True, index=True)
+    username = Column(String(255), nullable=True)
+    full_name = Column(String(255), nullable=True)
+    is_waiter = Column(Boolean, default=False)
+    is_manager = Column(Boolean, default=False)
+    is_admin = Column(Boolean, default=False)
+# 🔼
+
+# === Остальные импорты — после Base ===
 from ptbcontrib.roles import RolesHandler
 from telegram.ext import Application as PTBApplication, CommandHandler, MessageHandler, filters
 from telegram import Update
@@ -15,47 +36,45 @@ from app.infra.postgres.db import Database
 from app.core.my_calendar import Calendar
 from app.core.users.constants import RolesEnum
 
-Base = declarative_base()
 
 class Application:
     def __init__(self, app_settings: AppSettings, **kwargs):
         self.app_settings = app_settings
-        self._roles_handler = None  # Храним один экземпляр RolesHandler
+        self._roles_handler = None
 
-        # Инициализация БД
+        # Инициализация БД с нашим Base (в котором уже есть User)
         self.database = Database(
-            self.app_settings.postgres_dsn,
-            declarative_base=Base
+            self.app_settings.database_dsn,
+            declarative_base=Base  # ← передаём Base с User
         )
 
-        # Создание календаря
+        print(f"DSN: {self.app_settings.database_dsn}")# Создание календаря
         self.calendar = Calendar(self.database)
 
         # Создание репозитория и сервиса пользователей
         user_repository = UserRepository(database=self.database)
         self.user_service = UserService(repository=user_repository)
 
-        # Создание приложения бота БЕЗ post_init/post_shutdown
+        # Создание приложения бота
         self.bot_app = (
             PTBApplication.builder()
             .token(self.app_settings.TELEGRAM_API_KEY.get_secret_value())
             .build()
         )
 
-        # Явная инициализация зависимостей ДО запуска бота
-        asyncio.run(self.initialize_dependencies(self.bot_app))
+        # Явная инициализация зависимостей
+        asyncio.run(self.initialize_dependencies())
 
-        # Регистрация обработчиков — ПОСЛЕ всех инициализаций
+        # Регистрация обработчиков
         self._register_handlers()
 
-    async def initialize_dependencies(self, app: PTBApplication) -> None:
-        """Инициализирует зависимости приложения (БД и т. д.)."""
+    async def initialize_dependencies(self) -> None:
+        """Инициализирует зависимости: БД и роли."""
         try:
             logging.info("Initializing database...")
             await self.database.initialize()
             logging.info("Database initialized successfully")
 
-            # Добавляем инициализацию ролей
             logging.info("Setting up roles...")
             await self.setup_roles()
             logging.info("Roles setup completed")
@@ -64,7 +83,7 @@ class Application:
             raise
 
     async def shutdown_dependencies(self) -> None:
-        """Завершает работу зависимостей (закрывает соединения с БД)."""
+        """Завершает работу зависимостей."""
         try:
             logging.info("Shutting down database...")
             await self.database.shutdown()
@@ -73,6 +92,7 @@ class Application:
             logging.error(f"Failed to shutdown database: {e}")
 
     def _register_handlers(self) -> None:
+        """Регистрирует обработчики команд и сообщений."""
         handlers = [
             CommandHandler("start", start),
             CommandHandler("register", register),
@@ -89,47 +109,71 @@ class Application:
         )
 
     async def _error_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Логирует ошибки."""
         logging.error("Exception while handling update:", exc_info=context.error)
 
     async def setup_roles(self) -> None:
-        """Инициализирует роли для бота."""
+        """Инициализирует систему ролей."""
         try:
-            # Создаём один RolesHandler для всех ролей
-            self._roles_handler = RolesHandler(roles=[role.value for role in RolesEnum])
-            # Получаем всех пользователей для каждой роли и добавляем их
+            # Обёртка для совместимости с ptbcontrib.roles
+            class FakeUpdater:
+                def __init__(self, app):
+                    self._app = app
+                    self.callback = app.update_queue  # Единственное, что нужно
+
+            self._wrapped_app = FakeUpdater(self.bot_app)
+
+            # Создаём и регистрируем RolesHandler
+            self._roles_handler = RolesHandler(
+                handler=self._wrapped_app,
+                roles=[role.value for role in RolesEnum]
+            )
+            self.bot_app.add_handler(self._roles_handler)
+
+            # Добавляем пользователей в роли
             for role in RolesEnum:
-                user_ids = await self.user_service.get_user_ids_for_role(role.value)
-                for user_id in user_ids:
+                user_id = await self.user_service.get_user_id_for_role(role.value)
+                if user_id:
                     self._roles_handler.add_member(user_id, role=role.value)
 
-            logging.info(f"Roles initialized: {list(self._roles_handler.roles.keys())}")
+            logging.info(f"Roles initialized: {self._roles_handler.roles}")
         except Exception as e:
             logging.error(f"Failed to setup roles: {e}")
             raise
 
     async def event_create_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Обработчик команды /create_event."""
         try:
-            event_name = update.message.text[14:]
+            event_name = update.message.text[14:].strip()
+            if not event_name:
+                await context.bot.send_message(
+                    chat_id=update.message.chat_id,
+                    text="Пожалуйста, укажите название события. Пример: /create_event Открытие фестиваля"
+                )
+                return
+
             event_date = "2023-03-14"
             event_time = "14:00"
             event_details = "Описание события"
             user_id = update.effective_user.id
+
             event_id = await self.calendar.create_event(
                 event_name, event_date, event_time, event_details, user_id
             )
 
             await context.bot.send_message(
                 chat_id=update.message.chat_id,
-                text=f"Событие {event_name} создано и имеет номер {event_id}."
+                text=f"Событие «{event_name}» успешно создано. Номер события: {event_id}."
             )
         except Exception as e:
             logging.exception(e)
             await context.bot.send_message(
                 chat_id=update.message.chat_id,
-                text="При создании события произошла ошибка."
+                text="Произошла ошибка при создании события."
             )
 
     async def run(self) -> None:
+        """Запускает бота в режиме polling."""
         logging.info("Starting bot polling...")
         try:
             await self.bot_app.run_polling(
@@ -141,30 +185,33 @@ class Application:
             logging.error(f"Error in bot polling: {e}")
             raise
 
+
 def configure_logging() -> None:
+    """Настраивает логирование."""
     logging.basicConfig(
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         level=logging.INFO,
     )
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
+
 if __name__ == "__main__":
     configure_logging()
     logging.info("Application starting up.")
 
-    # Создаём экземпляр приложения
+    # Загружаем настройки
     app_settings = AppSettings()
+
+    # Создаём и запускаем приложение
     bot_app = Application(app_settings)
 
     try:
-        # Запускаем бота напрямую — без ручного управления event loop
         asyncio.run(bot_app.run())
     except KeyboardInterrupt:
         logging.info("Bot stopped by user")
     except Exception as e:
         logging.error(f"Application crashed: {e}")
     finally:
-        # Корректно завершаем работу
         try:
             asyncio.run(bot_app.shutdown_dependencies())
         except:

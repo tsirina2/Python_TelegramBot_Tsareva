@@ -1,13 +1,10 @@
 from dataclasses import dataclass
+from sqlalchemy import insert, select
 from app.infra.postgres.db import Database
-from app.core.models import User
-from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy import select
-
+from app.core.users.models import User
 
 
 @dataclass
-
 class UserRepository:
     database: Database
 
@@ -16,11 +13,14 @@ class UserRepository:
             insert_stmt = (
                 insert(User)
                 .values(id=user_id, is_waiter=is_waiter)
-                .on_conflict_do_nothing()
+                .on_conflict_do_nothing(index_elements=['id'])
             )
             await session.execute(insert_stmt)
             await session.commit()
-    async def get_waiter_ids(self) -> list(int):
+
+    async def get_waiter_ids(self) -> list[int]:
+        """Возвращает список ID всех пользователей с ролью официанта."""
         async with self.database.session() as session:
-            query = select(User.id).where(User.is_waiter ==True)
-            return list(await session.scalars(query))
+            result = await session.execute(select(User.id).where(User.is_waiter == True))
+            rows = result.scalars().all()
+            return list(rows)
