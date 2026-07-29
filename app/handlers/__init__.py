@@ -15,7 +15,7 @@ class Handler:
 HANDLERS: tuple[Handler, ...] = (
     Handler(
         handler=CommandHandler(command="start", callback=waiter_start),
-        role=RolesEnum.waiter
+        role=RolesEnum.WAITER
     ),
     Handler(
         handler=CommandHandler(command="start_user", callback=start)

@@ -1,5 +1,7 @@
 
+from enum import Enum
 
-from enum import StrEnum
-class RolesEnum(StrEnum):
-    waiter = "waiter"
+class RolesEnum(Enum):
+    USER = "user"
+    WAITER = "waiter"
+    ADMIN = "admin"

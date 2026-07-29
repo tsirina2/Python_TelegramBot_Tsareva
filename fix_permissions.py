@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import asyncpg
 
 async def fix_permissions():

@@ -1,0 +1,3 @@
+class ActiveOrderExists(Exception):
+    pass
+
