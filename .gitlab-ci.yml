@@ -5,7 +5,7 @@ build:
   stage: build
 
   image:
-    name: gcr.io/kaniko-project/executor:v1.6.8-debug
+    name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
 
   script:
