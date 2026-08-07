@@ -10,30 +10,8 @@ build:
 
   script:
     - mkdir -p /kaniko/.docker
-    - |
-      python3 - <<'PY'
-      import json
-      import base64
-      import os
-
-      with open(os.environ["CI_REGISTRY_KEY"], "r") as f:
-          key = f.read()
-
-      auth = base64.b64encode(
-          ("json_key:" + key).encode()
-      ).decode()
-
-      config = {
-          "auths": {
-              "cr.yandex": {
-                  "auth": auth
-              }
-          }
-      }
-
-      with open("/kaniko/.docker/config.json", "w") as f:
-          json.dump(config, f)
-      PY
+    - AUTH=$(printf 'json_key:%s' "$(cat "$CI_REGISTRY_KEY")" | base64 | tr -d '\n')
+    - echo "{\"auths\":{\"cr.yandex\":{\"auth\":\"$AUTH\"}}}" > /kaniko/.docker/config.json
     - /kaniko/executor
       --force
       --context "${CI_PROJECT_DIR}"
