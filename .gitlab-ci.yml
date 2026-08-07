@@ -10,8 +10,7 @@ build:
 
   script:
     - mkdir -p /kaniko/.docker
-    - AUTH=$(printf 'json_key:%s' "$(cat "$CI_REGISTRY_KEY")" | base64 -w 0)
-    - echo "{\"auths\":{\"cr.yandex\":{\"auth\":\"$AUTH\"}}}" > /kaniko/.docker/config.json
+    - echo "{\"auths\":{\"cr.yandex\":{\"username\":\"json_key\",\"password\":\"$(cat $CI_REGISTRY_KEY)\"}}}" > /kaniko/.docker/config.json
     - /kaniko/executor
       --force
       --context "${CI_PROJECT_DIR}"
