@@ -39,7 +39,7 @@ deploy:
     - apt-get update && apt-get install -y curl
     - curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
     - export PATH=${PATH}:/root/yandex-cloud/bin/
-    - curl -sSL https://raw.githubusercontent.com/tests-always-included/mo/master/mo -o mo
+    - curl -fL https://raw.githubusercontent.com/tests-always-included/mo/master/mo -o mo
     - chmod +x mo
     - ./mo docker-compose.prod.yml.template > docker-compose.prod.yml
     - echo "$CI_REGISTRY_KEY" > key.json
