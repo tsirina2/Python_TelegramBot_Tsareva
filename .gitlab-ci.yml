@@ -42,7 +42,7 @@ deploy:
     - curl -sSL https://raw.githubusercontent.com/tests-always-included/mo/master/mo -o mo
     - chmod +x mo
     - ./mo docker-compose.prod.yml.template > docker-compose.prod.yml
-    - echo "$CI_REGISTRY_KEY" > key.json
+    - cp "$CI_REGISTRY_KEY" key.json
     - yc config set service-account-key key.json
     - >
       yc compute instance create-with-container
