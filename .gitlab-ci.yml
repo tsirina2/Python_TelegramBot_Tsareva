@@ -46,6 +46,8 @@ deploy:
 
     - ./mo docker-compose.prod.yml.template > docker-compose.prod.yml
 
+    - yc config set service-account-key "$CI_REGISTRY_KEY"
+
     - >
       yc compute instance update-container
       --name telegram-bot-vm
