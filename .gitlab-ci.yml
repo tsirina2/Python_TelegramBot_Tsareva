@@ -37,23 +37,15 @@ deploy:
 
   script:
     - apt-get update && apt-get install -y curl
+
     - curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
-    - export PATH=${PATH}:/root/yandex-cloud/bin/
+    - export PATH="${PATH}:/root/yandex-cloud/bin/"
+
     - curl -sSL https://raw.githubusercontent.com/tests-always-included/mo/master/mo -o mo
     - chmod +x mo
+
     - ./mo docker-compose.prod.yml.template > docker-compose.prod.yml
-    - cp "$CI_REGISTRY_KEY" key.json
-    - yc config set service-account-key key.json
-    - >
-      yc compute instance create-with-container
-      --name telegram-bot-vm
-      --zone ru-central1-a
-      --folder-id b1q0iab6da8hl26o9a33
-      --public-ip=true
-      --create-boot-disk size=30
-      --service-account-name telegram-bot
-      --docker-compose-file docker-compose.prod.yml
-      || true
+
     - >
       yc compute instance update-container
       --name telegram-bot-vm
