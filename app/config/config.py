@@ -41,7 +41,7 @@ class AppSettings(BaseSettings):
     @computed_field
     @property
     def POSTGRES_DSN(self) -> PostgresDsn:
-        return return MultiHostUrl.build(
+        return MultiHostUrl.build(
 
                 scheme="postgresql+asyncpg",
                 username=self.POSTGRES_USER,
