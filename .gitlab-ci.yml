@@ -44,9 +44,16 @@ deploy:
     - curl -sSL https://raw.githubusercontent.com/tests-always-included/mo/master/mo -o mo
     - chmod +x mo
 
-    - ./mo docker-compose.prod.yml.template > docker-compose.prod.yml
+    - ./mo docker-compose.yml > docker-compose.prod.yml
 
-    - yc config set service-account-key "$CI_REGISTRY_KEY"
+    - cp "$CI_REGISTRY_KEY" key.json
+    - yc config set service-account-key key.json
+    - >
+      yc compute instance create-with-container
+      --name botinstance
+      --folder-id b1g7d1qnsof3lrk8hlad
+      --docker-compose-file docker-compose.prod.yml
+      || true
 
     - >
       yc compute instance update-container

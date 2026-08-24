@@ -10,7 +10,7 @@ services:
     restart: always
 
   bot:
-    image: cr.yandex/crplbfs7vbavbqbs12ptu/eduson-bot-lesson/ice-cream-shop:latest
+    image: cr.yandex/crpbigo0qo703tmevafa/telegram-bot-for-ice-cream-shop:${CI_COMMIT_SHORT_SHA}
     environment:
       TELEGRAM_API_KEY: ${TELEGRAM_API_KEY}
       POSTGRES_SERVER: db
@@ -24,7 +24,7 @@ services:
     restart: always
 
   admin:
-    image: cr.yandex/crplbfs7vbavbqbs12ptu/eduson-bot-lesson/ice-cream-shop:latest
+    image: cr.yandex/crpbigo0qo703tmevafa/telegram-bot-for-ice-cream-shop:${CI_COMMIT_SHORT_SHA}
     ports:
       - "${ADMIN_INTERFACE_PORT}:${ADMIN_INTERFACE_PORT}"
     environment:
