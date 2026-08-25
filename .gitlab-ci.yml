@@ -52,6 +52,7 @@ deploy:
       yc compute instance create-with-container
       --name botinstance
       --folder-id b1g7d1qnsof3lrk8hlad
+      --zone ru-central1-d
       --docker-compose-file docker-compose.prod.yml
       || true
 
