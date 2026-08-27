@@ -45,7 +45,7 @@ deploy:
     - chmod +x mo
 
     - ./mo docker-compose.yml > docker-compose.prod.yml
-
+    - grep -E 'image:|ADMIN_INTERFACE_PORT:|POSTGRES_PORT:|POSTGRES_DB:|POSTGRES_USER:|TELEGRAM_API_KEY:|ports:' docker-compose.prod.yml | sed -E 's/(TELEGRAM_API_KEY:).*/\1 [HIDDEN]/; s/(POSTGRES_PASSWORD:).*/\1 [HIDDEN]/; s/(ADMIN_PASSWORD:).*/\1 [HIDDEN]/'
     - cp "$CI_REGISTRY_KEY" key.json
     - yc config set service-account-key key.json
     - >
