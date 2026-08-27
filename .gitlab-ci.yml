@@ -41,10 +41,8 @@ deploy:
     - curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
     - export PATH="${PATH}:/root/yandex-cloud/bin/"
 
-    - curl -sSL https://raw.githubusercontent.com/tests-always-included/mo/master/mo -o mo
-    - chmod +x mo
-
-    - ./mo docker-compose.yml > docker-compose.prod.yml
+    - apt-get update && apt-get install -y curl gettext-base
+    - envsubst < docker-compose.yml > docker-compose.prod.yml
     - grep -E 'image:|ADMIN_INTERFACE_PORT:|POSTGRES_PORT:|POSTGRES_DB:|POSTGRES_USER:|TELEGRAM_API_KEY:|ports:' docker-compose.prod.yml | sed -E 's/(TELEGRAM_API_KEY:).*/\1 [HIDDEN]/; s/(POSTGRES_PASSWORD:).*/\1 [HIDDEN]/; s/(ADMIN_PASSWORD:).*/\1 [HIDDEN]/'
     - cp "$CI_REGISTRY_KEY" key.json
     - yc config set service-account-key key.json
