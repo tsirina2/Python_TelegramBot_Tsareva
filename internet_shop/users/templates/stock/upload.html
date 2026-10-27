@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Загрузка</title></head>
+<body>
+    <h1>Загрузка остатков</h1>
+
+    {% if messages %}
+        <ul>
+            {% for m in messages %}<li>{{ m }}</li>{% endfor %}
+        </ul>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Загрузить</button>
+    </form>
+
+    <hr>
+    <a href="{% url 'stock-export' %}">Выгрузить остатки в CSV</a>
+</body>
+</html>s

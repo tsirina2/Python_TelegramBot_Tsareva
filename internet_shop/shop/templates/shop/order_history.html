@@ -1,0 +1,28 @@
+{% extends "shop/base.html" %}
+
+{% block content %}
+<h2>My Order History</h2>
+
+{% if messages %}
+    <ul style="color: green;">
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{% if orders %}
+    <ul>
+    {% for order in orders %}
+        <li>
+            <strong>Order #{{ order.id }}</strong> — {{ order.product.name }} (x{{ order.quantity }})
+            <br><small>Date: {{ order.created_at }}</small>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>You have no past orders.</p>
+{% endif %}
+
+<p><a href="{% url 'shop:product_list' %}">Back to Products</a></p>
+{% endblock %}
